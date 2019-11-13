@@ -206,3 +206,35 @@ worker.onmessage = function (e) {
 ```
 
 上面代码中，先将嵌入网页的脚本代码，转成一个二进制对象，然后为这个二进制对象生成 URL，再让 Worker 加载这个 URL。这样就做到了，主线程和 Worker 的代码都在同一个网页上面。
+
+
+## 5. 应用场景
+
+对于轮询场景，可以放在 Worker 里面。只要数据有更新，就postMessage给主线程更新。可以结合indexedDB使用，实际工作中，刚用这个方法技改了一个项目。
+
+```js
+// 伪代码
+var pollingWorker = createWorker(function (e) {
+  var cache;
+
+  function compare(new, old) { ... };
+
+  setInterval(function () {
+    fetch('/xxx').then(function (res) {
+      var data = res.json();
+
+      if (!compare(data, cache)) {
+        cache = data;
+        self.postMessage(data);
+      }
+    })
+  }, 1000)
+});
+
+pollingWorker.onmessage = function () {
+  // render data
+}
+
+pollingWorker.postMessage('update');
+
+```
