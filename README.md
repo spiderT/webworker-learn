@@ -238,3 +238,57 @@ pollingWorker.onmessage = function () {
 pollingWorker.postMessage('update');
 
 ```
+
+
+## 6. [SharedWorker](https://developer.mozilla.org/zh-CN/docs/Web/API/SharedWorker)
+
+构造函数  SharedWorker()  创建一个执行指定url脚本的共享的web进程。  
+
+SharedWorker实质在于share，不同的线程可以共享一个线程，他们的数据也是共享的。可以被多个window共同使用，但必须保证这些标签页都是同源的(相同的协议，主机和端口号)  
+
+通过SharedWorker() 方法来创建一个共享进程对象。  
+
+```js
+var myWorker = new SharedWorker("worker.js");
+```
+
+然后两个脚本都通过 MessagePort 对象来访问worker，这个对象用SharedWorker.port 属性获得。如果已经用addEventListener监听了onmessage事件，则可以使用start() 方法手动启动端口：  
+
+```js
+myWorker.port.start();
+```
+
+启动端口时，两个脚本都会向worker发送消息， 然后使用port.postMessage()和port.onmessage处理从worker发送而来的消息:
+
+```js
+first.onchange = function() {
+    myWorker.port.postMessage([first.value,second.value]);
+    console.log('Message posted to worker');
+  }
+
+  second.onchange = function() {
+    myWorker.port.postMessage([first.value,second.value]);
+    console.log('Message posted to worker');
+  }
+
+  myWorker.port.onmessage = function(e) {
+    result1.textContent = e.data;
+    console.log('Message received from worker');
+  }
+
+```
+
+在worker中我们使用SharedWorkerGlobalScope.onconnect 处理程序连接到上面讨论的相同端口。可以在connect event的ports属性中获取到与该worker相关联的端口 — 然后我们使用MessagePort start() 方法来启动端口，然后 onmessage 处理程序处理来自主线程的消息。
+
+```js
+onconnect = function(e) {
+    var port = e.ports[0];
+
+    port.addEventListener('message', function(e) {
+      var workerResult = 'Result: ' + (e.data[0] * e.data[1]);
+      port.postMessage(workerResult);
+    });
+
+    port.start(); // Required when using addEventListener. Otherwise called implicitly by onmessage setter.
+}
+```
