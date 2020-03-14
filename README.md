@@ -292,3 +292,6 @@ onconnect = function(e) {
     port.start(); // Required when using addEventListener. Otherwise called implicitly by onmessage setter.
 }
 ```
+
+**注意**  
+在chrome的多user模式，或者隐身模式下，SharedWorker数据是不能共享的
